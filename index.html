@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#10243a">
   <title>Westside Wiffle League | Official League Hub</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
 </head>
 <body>
   <div class="topline"><span>EST. THIS SUMMER</span><span class="topline-right">PLAY HARD · BE NICE · BRING SNACKS</span></div>
@@ -25,6 +27,7 @@
     </nav>
   </header>
 
+  <div id="connectionNotice" class="connection-notice" role="status" hidden></div>
   <main>
     <section class="page active" id="page-home">
       <div class="hero">
@@ -105,7 +108,7 @@
 
     <section class="page" id="page-standings">
       <div class="page-banner"><span class="eyebrow">THE RACE TO THE TOP</span><h1>LEAGUE <em>STANDINGS.</em></h1><p>Wins, losses, runs for, and the all-important run differential.</p></div>
-      <div class="section-wrap"><div class="table-card"><div class="table-title"><div><span class="eyebrow">REGULAR SEASON</span><h2>THE LEADERBOARD</h2></div><span class="table-badge">UPDATED LIVE* </span></div><div class="table-scroll"><table><thead><tr><th>#</th><th>TEAM</th><th>GP</th><th>W</th><th>L</th><th>RF</th><th>RA</th><th>DIFF</th></tr></thead><tbody id="standingsBody"></tbody></table></div><p class="fine-print">*Updates from results entered in this browser. Teams are ranked by wins, then run differential.</p></div></div>
+      <div class="section-wrap"><div class="table-card"><div class="table-title"><div><span class="eyebrow">REGULAR SEASON</span><h2>THE LEADERBOARD</h2></div><span class="table-badge">UPDATED LIVE* </span></div><div class="table-scroll"><table><thead><tr><th>#</th><th>TEAM</th><th>GP</th><th>W</th><th>L</th><th>RF</th><th>RA</th><th>DIFF</th></tr></thead><tbody id="standingsBody"></tbody></table></div><p class="fine-print">Live shared standings. Teams are ranked by wins, then run differential.</p></div></div>
     </section>
 
     <section class="page" id="page-bracket">
@@ -128,14 +131,15 @@
       <div class="section-wrap admin-lock" id="adminLock">
         <form id="commissionerPasswordForm" class="paper-card commissioner-login" autocomplete="off">
           <span class="eyebrow">RESTRICTED ACCESS</span><h2>Commissioner sign-in</h2>
-          <p class="muted">Enter the commissioner password to manage league operations.</p>
-          <label for="commissionerPassword">Password</label><input id="commissionerPassword" type="password" required autocomplete="current-password" placeholder="Enter commissioner password">
-          <button class="btn btn-green full" type="submit">Unlock commissioner area <span>↗</span></button>
+          <p class="muted">Sign in with the commissioner account created in Supabase. Only authorized accounts can change league data.</p>
+          <label for="commissionerEmail">Commissioner email</label><input id="commissionerEmail" type="email" required autocomplete="username" placeholder="commissioner@example.com">
+          <label for="commissionerPassword">Password</label><input id="commissionerPassword" type="password" required autocomplete="current-password" placeholder="Commissioner password">
+          <button class="btn btn-green full" type="submit">Sign in to commissioner area <span>↗</span></button>
           <div id="commissionerLoginMessage" class="message" role="status" aria-live="polite"></div>
         </form>
       </div>
       <div class="section-wrap" id="adminContent" hidden>
-        <div class="admin-warning"><b>COMMISSIONER ACCESS</b><span>Changes are stored in this browser only. This static site uses a client-side password gate, not server-side authentication.</span></div>
+        <div class="admin-warning"><b>COMMISSIONER ACCESS</b><span>Edits are authorized by Supabase Row Level Security and sync across visitors.</span><span id="commissionerIdentity"></span><button id="commissionerLogout" class="btn btn-outline" type="button" hidden>Sign out</button></div>
         <div class="admin-tabs"><button class="tab active" data-tab="results">Enter results</button><button class="tab" data-tab="teams">Manage teams</button><button class="tab" data-tab="pools">Pool assignments</button><button class="tab" data-tab="settings">League settings</button></div>
         <div class="admin-panel active" id="admin-results">
           <div class="admin-panel-heading"><div><span class="eyebrow">THE SCOREBOOK</span><h2>LOG A GAME</h2></div></div>

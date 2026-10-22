@@ -1,49 +1,47 @@
 # Westside Wiffle League
 
-A professional sports-league-style wiffle ball tournament site for GitHub Pages. The initial league is empty: there are no sample teams, players, or games.
+A professional sports-league-style wiffle ball website for GitHub Pages, backed by Supabase for shared data across browsers and devices.
 
-## Included features
+## Features
 
+- Public name-only player registration and registration confirmation screen
+- Shared player registration list, rosters, standings, scores, pool play, and playoff bracket
+- Commissioner tools for teams, pools, results, and league settings
+- Supabase email/password sign-in plus database Row Level Security (RLS) for commissioner-only writes
+- Supabase Realtime subscriptions so connected visitors see new registrations and league updates
 - Professional navy, white, and red sports-league design
-- Player-only signup form with one required field: name, followed by a dedicated confirmation screen
-- Registered-player list, team roster view, standings, scores, pool play, and playoff bracket
-- Commissioner tools for creating teams, assigning pools, entering/deleting scores, and league settings
-- Commissioner tab password gate (`poopy`)
-- Staticrypt site-wide password encryption configured for GitHub Pages deployment using the repository secret `STATICRYPT_PASSWORD`
 
-## Deploy with Staticrypt to GitHub Pages
+## Required setup before deployment
 
-1. Create a GitHub repository and upload the contents of this folder to its root.
-2. In **Settings → Secrets and variables → Actions**, create a repository secret named `STATICRYPT_PASSWORD` and set its value to `IhaveIBS`.
-3. In **Settings → Pages**, set the source to **GitHub Actions**.
-4. In **Settings → Pages**, ensure the publishing source is **GitHub Actions**, not “Deploy from a branch.”
-5. Push to the `main` branch or run **Actions → Encrypt and deploy to GitHub Pages → Run workflow**. The workflow uses Staticrypt v3's supported `--directory` option to create `dist/index.html`, checks that the encrypted artifact exists, and deploys it.
-6. Open the Pages URL. The site-wide Staticrypt password is `IhaveIBS`; after decrypting the site, the Commissioner tab prompts for `poopy`.
+1. Follow **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)**. Create a Supabase project and run `supabase-setup.sql` in its SQL Editor.
+2. Replace the placeholders in `supabase-config.js` with your Supabase project URL and public anon/publishable key. Never use a `service_role` key in frontend code.
+3. Create a commissioner user in Supabase Authentication and insert that exact user's UUID into the private `private.commissioners` allowlist, as described in the setup guide. The old `poopy` client-side password is no longer used.
+4. Upload all files to the root of your GitHub repository, including `supabase-config.js`, `supabase-setup.sql`, and `SUPABASE_SETUP.md`.
+5. In GitHub **Settings → Pages**, choose **GitHub Actions**. The workflow in `.github/workflows/deploy.yml` publishes the site publicly by default. Optionally add the repository secret `STATICRYPT_PASSWORD` if you want an extra shared site-wide password barrier; it is separate from commissioner authentication.
+6. Push to `main` and confirm the workflow in **Actions** succeeds.
 
-If the live site does not show a password prompt, open the repository's **Actions** tab and inspect the latest workflow run. A site published from a branch instead of the Actions workflow will serve the unencrypted source HTML. The latest workflow must complete successfully before the updated site is live.
+### Open registration note
 
-The password is not stored in the repository workflow or source; it is supplied through the GitHub Actions secret. If the secret is absent, the workflow intentionally fails rather than publishing an unprotected page.
+The site is public by default, so anyone with the URL can reach the registration form. If you deliberately want an extra shared site-password barrier, add a repository secret named `STATICRYPT_PASSWORD`; the workflow will then encrypt the page. This barrier is optional and separate from commissioner authentication.
 
-## Important security and data limitations
+## Security model
 
-- Staticrypt is client-side page encryption, not a substitute for server-side authentication. It is suitable as a casual access barrier, not for sensitive information.
-- The Commissioner password gate is implemented in client-side JavaScript and is also only a casual barrier. Anyone with access to the source can inspect it. For real administrative security, use server-side authentication and authorization.
-- This is a static site and stores registrations, teams, and scores in the current browser's `localStorage`. Visitor data is not shared across devices or browsers. A shared public registration list requires a backend such as Supabase or Firebase.
-- Player registration asks only for a name. Do not collect sensitive information.
+- The Supabase browser key is public by design. RLS is the actual access-control boundary.
+- Public users can read the league and registered-player list and insert a player name. They cannot edit league data or delete registrations.
+- Only Auth accounts added to `private.commissioners` can update the league state or delete player registrations.
+- Never put a Supabase service-role/secret key in browser files.
+- Player names are public. The open, name-only form can be spammed; add CAPTCHA and server-side rate limiting if needed.
 
-## Local preview
+## Data migration and testing
 
-Open `index.html` directly or run:
-
-```bash
-python -m http.server 8000
-```
-
-Then visit <http://localhost:8000>. The local preview is not encrypted by Staticrypt; encryption is performed in the GitHub Actions deployment workflow.
+The shared Supabase database starts empty; the previous browser-local data is not migrated automatically. After setup, register a test name, open the site in another browser/device, and verify it appears. Then sign in as commissioner, create a team or score, and verify those changes appear elsewhere.
 
 ## Files
 
 - `index.html` — pages and forms
 - `styles.css` — responsive sports-league design
-- `app.js` — registrations, standings, score entry, and commissioner gate
-- `.github/workflows/deploy.yml` — Staticrypt encryption and GitHub Pages deployment
+- `app.js` — Supabase data access, live updates, rendering, and commissioner login
+- `supabase-config.js` — public Supabase URL and anon/publishable key placeholders
+- `supabase-setup.sql` — database schema, RLS policies, and realtime setup
+- `SUPABASE_SETUP.md` — step-by-step setup and deployment instructions
+- `.github/workflows/deploy.yml` — GitHub Pages deployment workflow

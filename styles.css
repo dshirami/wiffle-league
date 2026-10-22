@@ -25,3 +25,9 @@ body{background:#f1f4f8;color:var(--ink);font-family:var(--body)}
 .confirmation-check{width:64px;height:64px;margin:0 auto 22px;display:grid;place-items:center;border-radius:50%;background:#e7f5ec;color:#17633e;font-size:35px;font-weight:900}
 .confirmation-card>.eyebrow{color:#d8293e}.confirmation-card h1{font:900 clamp(40px,6vw,64px)/.95 var(--display);letter-spacing:-.4px;margin:18px 0;color:#10243a}.confirmation-card h1 em{font-style:normal;color:#d8293e}.confirmation-card>p{color:#526176;line-height:1.7}.confirmation-ticket{max-width:440px;margin:30px auto 24px;padding:22px;border:1px dashed #9aaabd;border-radius:6px;background:#f8fafc;display:flex;flex-direction:column;gap:9px}.confirmation-ticket span{font-size:9px;font-weight:900;letter-spacing:1.6px;color:#64748b}.confirmation-ticket strong{font:900 22px var(--display);color:#10243a}.confirmation-ticket small{font-size:11px;letter-spacing:1.5px;font-weight:900;color:#d8293e;overflow-wrap:anywhere}.confirmation-card .confirmation-next{font-size:12px;max-width:500px;margin:0 auto 26px}.confirmation-actions{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap}.confirmation-actions .text-link{color:#10243a}
 @media(max-width:520px){.confirmation-wrap{padding:30px 5%}.confirmation-card{padding:28px 20px}.confirmation-actions{flex-direction:column;gap:18px}.confirmation-actions .btn{width:100%}}
+
+
+/* Shared database connection notice and auth-state controls */
+[hidden] { display: none !important; }
+.connection-notice { padding: 12px 20px; background: #fff4d6; color: #674d00; border-bottom: 1px solid #e5ca7a; text-align: center; font-size: .9rem; }
+#commissionerIdentity { display: block; margin-top: 6px; opacity: .85; font-size: .88rem; }

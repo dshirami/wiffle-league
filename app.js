@@ -1,24 +1,61 @@
 (() => {
-  const STORAGE_KEY = "westsideWiffleLeague_v3";
   const $ = (id) => document.getElementById(id);
-  const uid = () => "id-" + Math.random().toString(36).slice(2, 10);
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Math.random().toString(36).slice(2, 10));
   const today = () => new Date().toISOString().slice(0, 10);
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const colorNames = {green:"Navy",red:"Red",blue:"Blue",yellow:"Gold",purple:"Purple",orange:"Orange"};
   const emptyState = () => ({settings:{leagueName:"Westside Wiffle League",seasonLabel:"OFFICIAL LEAGUE",playoffTeams:"4"},teams:[],games:[],players:[]});
-  let state;
-  try {
-    state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || emptyState();
-  } catch { state = emptyState(); }
-  if (!state || !Array.isArray(state.teams) || !Array.isArray(state.games)) state = emptyState();
-  if (!Array.isArray(state.players)) state.players = [];
-  if (!state.settings || typeof state.settings !== "object") state.settings = emptyState().settings;
-  // Normalize data from older browser saves so one incomplete roster cannot break the entire site.
-  state.teams = state.teams.map(t => ({...t, players: Array.isArray(t.players) ? t.players : [], pool: t.pool || "A", color: t.color || "green"}));
-  state.games = state.games.map(g => ({status: "final", type: "pool", ...g}));
-  let toastTimer;
-  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); render(); }
+  let state = emptyState();
+  let supabase = null;
+  let commissionerSession = null;
+  let realtimeChannel = null;
+  let isSaving = false;
+  const config = window.WESTSIDE_SUPABASE_CONFIG || {};
+  if (window.supabase && config.url && config.anonKey && !config.url.includes("YOUR_PROJECT")) {
+    supabase = window.supabase.createClient(config.url, config.anonKey, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  }
+  function normalizeState(raw) {
+    const fallback = emptyState();
+    const result = raw && typeof raw === "object" ? raw : fallback;
+    result.settings = result.settings && typeof result.settings === "object" ? {...fallback.settings, ...result.settings} : fallback.settings;
+    result.teams = Array.isArray(result.teams) ? result.teams.map(t => ({...t, players:Array.isArray(t.players)?t.players:[], pool:t.pool||"A", color:t.color||"green"})) : [];
+    result.games = Array.isArray(result.games) ? result.games.map(g => ({status:"final",type:"pool",...g})) : [];
+    result.players = Array.isArray(result.players) ? result.players : [];
+    return result;
+  }
+  function publicStatePayload() { return {settings:state.settings, teams:state.teams, games:state.games}; }
+  async function loadSharedData() {
+    if (!supabase) { showSetupWarning(); render(); return; }
+    const [leagueResult, playersResult] = await Promise.all([
+      supabase.from("league_state").select("data").eq("id",1).single(),
+      supabase.from("players").select("id,name,created_at").order("created_at",{ascending:true})
+    ]);
+    if (leagueResult.error) console.error("Unable to load league data:", leagueResult.error.message);
+    if (playersResult.error) console.error("Unable to load registrations:", playersResult.error.message);
+    state = normalizeState(leagueResult.data?.data || emptyState());
+    state.players = (playersResult.data || []).map(p=>({id:p.id,name:p.name,registeredAt:p.created_at}));
+    render();
+    if (leagueResult.error || playersResult.error) toast("Could not fully load shared data. Check the Supabase setup.");
+  }
+  function showSetupWarning() {
+    const el = $("connectionNotice");
+    if (el) { el.hidden = false; el.textContent = "Shared database is not configured yet. Follow SUPABASE_SETUP.md to connect this league."; }
+  }
   function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2800);}
+  async function save(){
+    render();
+    if (!supabase) { toast("Connect Supabase before saving shared league changes."); return false; }
+    if (!commissionerSession?.user) { toast("Sign in as the commissioner to make league changes."); return false; }
+    isSaving = true;
+    try {
+      const {error} = await supabase.from("league_state").update({data:publicStatePayload(),updated_at:new Date().toISOString()}).eq("id",1);
+      if (error) throw error;
+      toast("Saved to the shared league database.");
+      return true;
+    } catch (err) {
+      console.error(err); toast("Save failed. Check commissioner permissions and database setup."); await loadSharedData(); return false;
+    } finally { isSaving = false; }
+  }
   function team(id){return state.teams.find(t=>t.id===id);}
   function teamName(id){return team(id)?.name || "TBD";}
   function initials(name){return String(name||"?").trim().split(/\s+/).slice(0,2).map(s=>s[0]).join("").toUpperCase();}
@@ -96,25 +133,33 @@
     document.querySelectorAll(".brand small").forEach(el=>el.textContent=(state.settings.seasonLabel||"WIFFLE LEAGUE").toUpperCase());
     renderPlayerSignups();renderHome();renderTeams();renderStandings();renderScores();renderBracket();renderAdmin();
   }
-  const COMMISSIONER_SESSION_KEY = "westsideWiffleCommissionerUnlocked";
-  function commissionerUnlocked(){ try { return sessionStorage.getItem(COMMISSIONER_SESSION_KEY) === "yes"; } catch { return false; } }
-  function syncCommissionerGate(){
-    const unlocked = commissionerUnlocked();
+  async function syncCommissionerGate(){
+    if (supabase) {
+      const {data} = await supabase.auth.getSession();
+      commissionerSession = data?.session || null;
+    } else commissionerSession = null;
+    const unlocked = !!commissionerSession?.user;
     $("adminLock").hidden = unlocked;
     $("adminContent").hidden = !unlocked;
+    $("commissionerLogout").hidden = !unlocked;
+    $("commissionerIdentity").textContent = unlocked ? `Signed in: ${commissionerSession.user.email}` : "";
     if (!unlocked) $("commissionerPassword").value = "";
   }
-  $("commissionerPasswordForm").addEventListener("submit", e => {
+  $("commissionerPasswordForm").addEventListener("submit", async e => {
     e.preventDefault();
-    if ($("commissionerPassword").value === "poopy") {
-      try { sessionStorage.setItem(COMMISSIONER_SESSION_KEY, "yes"); } catch {}
-      setMessage("commissionerLoginMessage", "Access granted. Commissioner tools unlocked.", "success");
-      syncCommissionerGate();
-    } else {
-      setMessage("commissionerLoginMessage", "Incorrect password. Try again.", "error");
-      $("commissionerPassword").select();
-    }
+    if (!supabase) { setMessage("commissionerLoginMessage","Database is not configured yet. Follow SUPABASE_SETUP.md.","error"); return; }
+    const email=$("commissionerEmail").value.trim();
+    const password=$("commissionerPassword").value;
+    const button=$("commissionerPasswordForm").querySelector("button[type=submit]");
+    button.disabled=true; button.textContent="Signing in…";
+    const {data,error}=await supabase.auth.signInWithPassword({email,password});
+    button.disabled=false; button.innerHTML='Sign in to commissioner area <span>↗</span>';
+    if (error) { setMessage("commissionerLoginMessage","Sign-in failed. Check the email/password and make sure this user is authorized as commissioner.","error"); return; }
+    commissionerSession=data.session;
+    setMessage("commissionerLoginMessage","Signed in. Loading commissioner tools…","success");
+    await syncCommissionerGate(); render();
   });
+  $("commissionerLogout").addEventListener("click",async()=>{if(supabase)await supabase.auth.signOut();commissionerSession=null;await syncCommissionerGate();toast("Commissioner signed out.");});
   function goToPage(){
     let page=(location.hash||"#home").slice(1);if(!["home","signup","signup-confirmation","teams","standings","bracket","scores","admin"].includes(page))page="home";
     if(page === "admin") syncCommissionerGate();
@@ -125,40 +170,47 @@
   }
   $("menuToggle").addEventListener("click",()=>$("mainNav").classList.toggle("open"));
   window.addEventListener("hashchange",goToPage);
-  $("signupForm").addEventListener("submit",e=>{
+  $("signupForm").addEventListener("submit",async e=>{
     e.preventDefault();
     const name=$("playerName").value.trim();
     if(!name){setMessage("signupMessage","Enter your name to register.","error");return;}
+    if(!supabase){setMessage("signupMessage","Registration is not connected yet. Please try again after the league database is configured.","error");return;}
     const duplicate=(state.players||[]).some(p=>p.name.trim().toLowerCase()===name.toLowerCase());
     if(duplicate){setMessage("signupMessage","That name is already on the player list.","error");return;}
-    if(!Array.isArray(state.players))state.players=[];
-    state.players.push({id:uid(),name,registeredAt:new Date().toISOString()});
-    save();$("signupForm").reset();
-    $("confirmationPlayerName").textContent = name.toUpperCase();
-    $("confirmationMessage").textContent = `Thanks, ${name}. Your player registration has been received.`;
-    location.hash = "signup-confirmation";
+    const button=$("signupForm").querySelector("button[type=submit]");button.disabled=true;button.textContent="Submitting…";
+    const {data,error}=await supabase.from("players").insert({name}).select("id,name,created_at").single();
+    button.disabled=false;button.innerHTML='Submit registration <span>↗</span>';
+    if(error){setMessage("signupMessage",error.code==="23505"?"That name is already registered.":"Registration failed. Please try again in a moment.","error");return;}
+    state.players.push({id:data.id,name:data.name,registeredAt:data.created_at});renderPlayerSignups();renderHome();$("signupForm").reset();
+    $("confirmationPlayerName").textContent=name.toUpperCase();$("confirmationMessage").textContent=`Thanks, ${name}. Your player registration has been received.`;location.hash="signup-confirmation";
   });
   $("teamSearch").addEventListener("input",renderTeams);
   $("scoreFilter").addEventListener("change",renderScores);
-  $("resultForm").addEventListener("submit",e=>{
-    e.preventDefault();
+  $("resultForm").addEventListener("submit",async e=>{
+    e.preventDefault();if(!commissionerSession?.user){toast("Sign in as commissioner first.");return;}
     const home=$("homeTeam").value,away=$("awayTeam").value,status=$("gameStatus").value,type=$("gameType").value;
     if(!home||!away){setMessage("resultMessage","Choose both teams.","error");return;}
     if(home===away){setMessage("resultMessage","A team can't play itself. Pick two different teams.","error");return;}
     const hs=Number($("homeScore").value),as=Number($("awayScore").value);
     if(status==="final"&&hs===as){setMessage("resultMessage","Final games need a winner. Ties aren't allowed.","error");return;}
     const game={id:uid(),type,date:$("gameDate").value||today(),home,away,homeScore:hs,awayScore:as,status,round:$("roundName").value.trim()||(type==="pool"?"Pool play":"Playoff")};
-    state.games.push(game);save();$("resultForm").reset();$("gameDate").value=today();$("homeScore").value=0;$("awayScore").value=0;
-    setMessage("resultMessage","Game saved. Standings, scores, and bracket have been refreshed.","success");
+    state.games.push(game);const ok=await save();if(ok){$("resultForm").reset();$("gameDate").value=today();$("homeScore").value=0;$("awayScore").value=0;setMessage("resultMessage","Game saved to the shared league. Scores, standings, and bracket are updated.","success");}
   });
-  $("adminGameList").addEventListener("click",e=>{const b=e.target.closest("[data-delete-game]");if(!b)return;const g=state.games.find(x=>x.id===b.dataset.deleteGame);if(!g)return;if(confirm(`Delete this game: ${teamName(g.home)} vs ${teamName(g.away)}?`)){state.games=state.games.filter(x=>x.id!==g.id);save();toast("Game removed from the scorebook.");}});
-  $("createTeamForm").addEventListener("submit",e=>{e.preventDefault();const name=$("adminTeamName").value.trim();if(state.teams.some(t=>t.name.toLowerCase()===name.toLowerCase())){toast("A team with that name already exists.");return;}state.teams.push({id:uid(),name,color:$("adminTeamColor").value,pool:"A",players:[]});save();$("createTeamForm").reset();toast(`${name} added to the league.`);});
-  $("adminTeamList").addEventListener("click",e=>{const b=e.target.closest("[data-delete-team]");if(!b)return;const t=team(b.dataset.deleteTeam);if(!t)return;if(confirm(`Delete ${t.name} and its roster? Games involving this team will also be deleted.`)){state.teams=state.teams.filter(x=>x.id!==t.id);state.games=state.games.filter(g=>g.home!==t.id&&g.away!==t.id);save();toast("Team and associated games deleted.");}});
-  $("poolForm").addEventListener("submit",e=>{e.preventDefault();document.querySelectorAll("[data-pool-team]").forEach(sel=>{const t=team(sel.dataset.poolTeam);if(t)t.pool=sel.value;});save();setMessage("poolMessage","Pool assignments saved.","success");});
-  $("settingsForm").addEventListener("submit",e=>{e.preventDefault();state.settings.leagueName=$("leagueName").value.trim();state.settings.seasonLabel=$("seasonLabel").value.trim();state.settings.playoffTeams=$("playoffTeams").value;save();setMessage("settingsMessage","League settings saved.","success");});
+  $("adminGameList").addEventListener("click",async e=>{const b=e.target.closest("[data-delete-game]");if(!b||!commissionerSession?.user)return;const g=state.games.find(x=>x.id===b.dataset.deleteGame);if(!g)return;if(confirm(`Delete this game: ${teamName(g.home)} vs ${teamName(g.away)}?`)){state.games=state.games.filter(x=>x.id!==g.id);await save();}});
+  $("createTeamForm").addEventListener("submit",async e=>{e.preventDefault();if(!commissionerSession?.user)return;const name=$("adminTeamName").value.trim();if(state.teams.some(t=>t.name.toLowerCase()===name.toLowerCase())){toast("A team with that name already exists.");return;}state.teams.push({id:uid(),name,color:$("adminTeamColor").value,pool:"A",players:[]});if(await save()){$("createTeamForm").reset();toast(`${name} added to the league.`);}});
+  $("adminTeamList").addEventListener("click",async e=>{const b=e.target.closest("[data-delete-team]");if(!b||!commissionerSession?.user)return;const t=team(b.dataset.deleteTeam);if(!t)return;if(confirm(`Delete ${t.name} and its roster? Games involving this team will also be deleted.`)){state.teams=state.teams.filter(x=>x.id!==t.id);state.games=state.games.filter(g=>g.home!==t.id&&g.away!==t.id);await save();}});
+  $("poolForm").addEventListener("submit",async e=>{e.preventDefault();if(!commissionerSession?.user)return;document.querySelectorAll("[data-pool-team]").forEach(sel=>{const t=team(sel.dataset.poolTeam);if(t)t.pool=sel.value;});if(await save())setMessage("poolMessage","Pool assignments saved to the shared league.","success");});
+  $("settingsForm").addEventListener("submit",async e=>{e.preventDefault();if(!commissionerSession?.user)return;state.settings.leagueName=$("leagueName").value.trim();state.settings.seasonLabel=$("seasonLabel").value.trim();state.settings.playoffTeams=$("playoffTeams").value;if(await save())setMessage("settingsMessage","League settings saved.","success");});
   document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===tab));document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.id==="admin-"+tab.dataset.tab));}));
-  $("resetDemo").addEventListener("click",()=>{if(confirm("Clear all local player registrations, teams, games, and settings? This cannot be undone.")){state=emptyState();save();toast("League data cleared.");}});
-  $("exportData").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="backyard-wiffle-league.json";a.click();URL.revokeObjectURL(url);toast("League JSON export prepared.");});
+  $("resetDemo").addEventListener("click",async()=>{if(!commissionerSession?.user)return;if(confirm("Clear all teams, games, and league settings? Player registrations will remain. This cannot be undone.")){const players=state.players;state=emptyState();state.players=players;await save();}});
+  $("exportData").addEventListener("click",()=>{if(!commissionerSession?.user)return;const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="westside-wiffle-league.json";a.click();URL.revokeObjectURL(url);});
+  function setupRealtime(){
+    if(!supabase)return;
+    realtimeChannel=supabase.channel("westside-league-live")
+      .on("postgres_changes",{event:"*",schema:"public",table:"league_state"},async()=>{await loadSharedData();})
+      .on("postgres_changes",{event:"*",schema:"public",table:"players"},async()=>{const {data,error}=await supabase.from("players").select("id,name,created_at").order("created_at",{ascending:true});if(!error){state.players=(data||[]).map(p=>({id:p.id,name:p.name,registeredAt:p.created_at}));renderPlayerSignups();renderHome();}})
+      .subscribe();
+  }
   $("gameDate").value=today();
-  syncCommissionerGate();render();goToPage();
+  (async()=>{if(supabase){await loadSharedData();setupRealtime();await syncCommissionerGate();supabase.auth.onAuthStateChange(async(_event,session)=>{commissionerSession=session;await syncCommissionerGate();render();});}else{showSetupWarning();render();await syncCommissionerGate();}goToPage();})();
 })();
