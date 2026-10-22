@@ -79,13 +79,15 @@
     const count = $("signupPlayerCount");
     const list = $("signupPlayerList");
     if (count) count.textContent = players.length;
-    if (list) list.innerHTML = players.length ? `<ol>${players.map((p,i)=>`<li><span class="registered-number">${String(i+1).padStart(2,"0")}</span><span>${escapeHtml(p.name)}</span></li>`).join("")}</ol>` : '<p class="muted registration-empty">No player registrations yet. Be the first to sign up.</p>';
+    const markup = players.length ? `<ol>${players.map((p,i)=>`<li><span class="registered-number">${String(i+1).padStart(2,"0")}</span><span>${escapeHtml(p.name)}</span></li>`).join("")}</ol>` : '<p class="muted registration-empty">No player registrations yet. Be the first to sign up.</p>';
+    if (list) list.innerHTML = markup;
+    const directory = $("playersDirectoryList");
+    const directoryCount = $("playersDirectoryCount");
+    if (directoryCount) directoryCount.textContent = players.length;
+    if (directory) directory.innerHTML = players.length ? `<ol>${players.map((p,i)=>`<li><span class="registered-number">${String(i+1).padStart(2,"0")}</span><span class="directory-player-name">${escapeHtml(p.name)}</span><span class="directory-player-status">REGISTERED</span></li>`).join("")}</ol>` : '<div class="empty-state">No players have signed up yet. Be the first to register for the November tournament.</div>';
   }
   function renderHome(){
-    const players=(state.players||[]).length+state.teams.reduce((n,t)=>n+t.players.length,0);
-    $("homeTeamCount").textContent=state.teams.length;$("homeGames").textContent=finalGames().length;
-    $("homeRuns").textContent=finalGames().reduce((n,g)=>n+Number(g.homeScore)+Number(g.awayScore),0);
-    $("homePlayers").textContent=players;
+    if ($("homePlayers")) $("homePlayers").textContent=(state.players||[]).length;
     const latest=[...state.games].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,4);
     $("homeLatest").innerHTML=latest.length?latest.map(g=>`<div class="latest-item"><span class="latest-tag">${g.status==="final"?"FINAL": "UP NEXT"}</span><span class="latest-match">${escapeHtml(teamName(g.home))} <span class="muted">vs.</span> ${escapeHtml(teamName(g.away))}</span><span class="latest-score">${g.status==="final"?`${g.homeScore}–${g.awayScore}`:"—"}</span></div>`).join(""):`<div class="empty-state">No games on the books yet. Commissioner, it's your move.</div>`;
   }
@@ -161,12 +163,12 @@
   });
   $("commissionerLogout").addEventListener("click",async()=>{if(supabase)await supabase.auth.signOut();commissionerSession=null;await syncCommissionerGate();toast("Commissioner signed out.");});
   function goToPage(){
-    let page=(location.hash||"#home").slice(1);if(!["home","signup","signup-confirmation","teams","standings","bracket","scores","admin"].includes(page))page="home";
+    let page=(location.hash||"#home").slice(1);if(!["home","signup","signup-confirmation","players","teams","standings","bracket","scores","admin"].includes(page))page="home";
     if(page === "admin") syncCommissionerGate();
     document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));
     document.querySelectorAll("[data-page]").forEach(a=>a.classList.toggle("active",a.dataset.page===page));
     $("mainNav").classList.remove("open");window.scrollTo({top:0,behavior:"smooth"});
-    if(page==="signup")renderPlayerSignups();
+    if(page==="signup"||page==="players")renderPlayerSignups();
   }
   $("menuToggle").addEventListener("click",()=>$("mainNav").classList.toggle("open"));
   window.addEventListener("hashchange",goToPage);

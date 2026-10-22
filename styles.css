@@ -31,3 +31,18 @@ body{background:#f1f4f8;color:var(--ink);font-family:var(--body)}
 [hidden] { display: none !important; }
 .connection-notice { padding: 12px 20px; background: #fff4d6; color: #674d00; border-bottom: 1px solid #e5ca7a; text-align: center; font-size: .9rem; }
 #commissionerIdentity { display: block; margin-top: 6px; opacity: .85; font-size: .88rem; }
+
+/* November tournament dashboard and public player directory */
+.tournament-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tournament-stats .stat-card{min-height:160px;justify-content:center;gap:12px}
+.tournament-stats .stat-detail{font:900 clamp(32px,4vw,48px)/1 var(--display);letter-spacing:-.4px;overflow-wrap:anywhere}
+.players-directory-card{overflow:hidden}
+.players-directory-list{padding:0 25px}
+.players-directory-list ol{list-style:none;margin:0;padding:0}
+.players-directory-list li{display:flex;align-items:center;gap:14px;padding:15px 2px;border-bottom:1px solid #e5eaf0}
+.players-directory-list li:last-child{border-bottom:0}
+.directory-player-name{font-weight:750;flex:1}
+.directory-player-status{font-size:9px;letter-spacing:1px;font-weight:900;color:#17633e;background:#e7f5ec;border-radius:3px;padding:6px 8px}
+.players-directory-footer{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 25px;background:#f8fafc;border-top:1px solid #e5eaf0}
+.players-directory-footer .muted{font-size:12px}
+@media(max-width:720px){.tournament-stats{grid-template-columns:1fr}.tournament-stats .stat-card{min-height:115px}.players-directory-list{padding:0 16px}.players-directory-footer{padding:18px 16px;align-items:flex-start;flex-direction:column}.players-directory-footer .btn{width:100%;text-align:center}}

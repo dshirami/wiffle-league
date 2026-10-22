@@ -19,6 +19,7 @@
     <nav id="mainNav">
       <a href="#home" data-page="home">Home</a>
       <a href="#signup" data-page="signup">Sign Up</a>
+      <a href="#players" data-page="players">Players</a>
       <a href="#teams" data-page="teams">Teams</a>
       <a href="#standings" data-page="standings">Standings</a>
       <a href="#bracket" data-page="bracket">Playoffs</a>
@@ -51,12 +52,11 @@
       </div>
       <div class="ticker"><div>WESTSIDE WIFFLE LEAGUE &nbsp; • &nbsp; EVERY INNING COUNTS &nbsp; • &nbsp; EARN THE WIN &nbsp; • &nbsp; WESTSIDE WIFFLE LEAGUE &nbsp; • &nbsp; EVERY INNING COUNTS &nbsp; • &nbsp; EARN THE WIN &nbsp; • &nbsp;</div></div>
       <div class="section-wrap">
-        <div class="section-heading"><div><span class="eyebrow">LEAGUE DASHBOARD</span><h2>SEASON<br><em>OVERVIEW.</em></h2></div><p>Live league metrics, match results, and the race to the championship.</p></div>
-        <div class="stats-grid">
-          <article class="stat-card"><span class="stat-label">REGISTERED TEAMS</span><strong id="homeTeamCount">0</strong><span class="stat-foot">Awaiting registration</span></article>
-          <article class="stat-card stat-highlight"><span class="stat-label">GAMES PLAYED</span><strong id="homeGames">0</strong><span class="stat-foot">Regular season</span></article>
-          <article class="stat-card"><span class="stat-label">TOTAL RUNS</span><strong id="homeRuns">0</strong><span class="stat-foot">League-wide</span></article>
-          <article class="stat-card"><span class="stat-label">ROSTER SPOTS</span><strong id="homePlayers">0</strong><span class="stat-foot">Player registrations</span></article>
+        <div class="section-heading"><div><span class="eyebrow">LEAGUE DASHBOARD</span><h2>NOVEMBER<br><em>TOURNAMENT.</em></h2></div><p>Tryout tourney to scout potential team members for a potential Sunday league!</p></div>
+        <div class="stats-grid tournament-stats">
+          <article class="stat-card stat-highlight"><span class="stat-label">REGISTERED PLAYERS</span><strong id="homePlayers">0</strong><span class="stat-foot">Players signed up</span></article>
+          <article class="stat-card"><span class="stat-label">DATE</span><strong class="stat-detail">11/1/2026</strong><span class="stat-foot">November tournament</span></article>
+          <article class="stat-card"><span class="stat-label">LOCATION</span><strong class="stat-detail">TBD</strong><span class="stat-foot">Details to come</span></article>
         </div>
       </div>
       <div class="section-wrap latest-wrap">
@@ -84,6 +84,17 @@
           <div class="registration-count"><span>REGISTERED PLAYERS</span><strong id="signupPlayerCount">0</strong></div>
           <div id="signupPlayerList" class="registered-player-list"></div>
         </aside>
+      </div>
+    </section>
+
+    <section class="page" id="page-players">
+      <div class="page-banner"><span class="eyebrow">NOVEMBER TOURNAMENT</span><h1>PLAYER <em>ROSTER.</em></h1><p>Everyone who has signed up for the November 1 tryout tournament, all in one place.</p></div>
+      <div class="section-wrap">
+        <div class="table-card players-directory-card">
+          <div class="table-title"><div><span class="eyebrow">OPEN REGISTRATION</span><h2>REGISTERED PLAYERS</h2></div><span class="table-badge"><span id="playersDirectoryCount">0</span> PLAYERS</span></div>
+          <div id="playersDirectoryList" class="players-directory-list" aria-live="polite"><p class="muted registration-empty">Loading player list…</p></div>
+          <div class="players-directory-footer"><span class="muted">Player list updates as new registrations come in.</span><a class="btn btn-green" href="#signup">Sign up <span>↗</span></a></div>
+        </div>
       </div>
     </section>
 

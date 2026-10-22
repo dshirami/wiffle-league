@@ -45,3 +45,8 @@ The shared Supabase database starts empty; the previous browser-local data is no
 - `supabase-setup.sql` — database schema, RLS policies, and realtime setup
 - `SUPABASE_SETUP.md` — step-by-step setup and deployment instructions
 - `.github/workflows/deploy.yml` — GitHub Pages deployment workflow
+
+
+## November Tournament update
+
+The home dashboard now highlights the November 1, 2026 tournament, with registered-player count, date, and location (TBD). The Players navigation tab displays the shared public registration list and updates when new names are submitted.
