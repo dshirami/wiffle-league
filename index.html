@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f2b">
+  <title>Backyard Wiffle League</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="topline"><span>EST. THIS SUMMER</span><span class="topline-right">PLAY HARD · BE NICE · BRING SNACKS</span></div>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="Backyard Wiffle League home">
+      <span class="brand-ball">W</span><span><b>BACKYARD</b><small>WIFFLE LEAGUE</small></span>
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+    <nav id="mainNav">
+      <a href="#home" data-page="home">Home</a>
+      <a href="#signup" data-page="signup">Sign Up</a>
+      <a href="#teams" data-page="teams">Teams</a>
+      <a href="#standings" data-page="standings">Standings</a>
+      <a href="#bracket" data-page="bracket">Playoffs</a>
+      <a href="#scores" data-page="scores">Scores</a>
+      <a href="#admin" data-page="admin" class="admin-nav">Commissioner</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page active" id="page-home">
+      <div class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> THE NEIGHBORHOOD'S BIGGEST LITTLE LEAGUE</div>
+          <h1>BIG SWINGS.<br><em>BACKYARD</em><br>LEGENDS.</h1>
+          <p>Grab a bat, round up your crew, and make some summer memories. The season starts when you do.</p>
+          <div class="hero-actions"><a class="btn btn-cream" href="#signup">Get in the game <span>↗</span></a><a class="text-link" href="#bracket">See the playoff picture →</a></div>
+          <div class="hero-note"><span class="mini-ball">✦</span> ALL SKILL LEVELS. MAXIMUM BRAGGING RIGHTS.</div>
+        </div>
+        <div class="hero-art" role="img" aria-label="Illustration of a backyard wiffle ball field">
+          <div class="sun"></div><div class="cloud cloud-one"></div><div class="cloud cloud-two"></div>
+          <div class="field-fence"></div><div class="field">
+            <div class="field-stripe stripe-one"></div><div class="field-stripe stripe-two"></div>
+            <div class="diamond"></div><div class="mound"></div><div class="homeplate"></div>
+          </div>
+          <div class="bat bat-one"></div><div class="ball-illustration"><span>W</span></div>
+          <div class="art-sticker">PLAY<br> BALL!</div>
+          <div class="art-caption">LOCAL HEROES<br>WELCOME HERE</div>
+        </div>
+      </div>
+      <div class="ticker"><div>NO UMPS? NO PROBLEM. &nbsp; ✳ &nbsp; GOOD VIBES ONLY. &nbsp; ✳ &nbsp; TALK TRASH, SHAKE HANDS. &nbsp; ✳ &nbsp; NO UMPS? NO PROBLEM. &nbsp; ✳ &nbsp; GOOD VIBES ONLY. &nbsp; ✳ &nbsp;</div></div>
+      <div class="section-wrap">
+        <div class="section-heading"><div><span class="eyebrow">THE SEASON AT A GLANCE</span><h2>THE LEAGUE<br><em>BOARD.</em></h2></div><p>Every run counts. Every team has a shot. Keep an eye on the race to the backyard crown.</p></div>
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-label">TEAMS IN THE MIX</span><strong id="homeTeamCount">0</strong><span class="stat-foot">And counting…</span></article>
+          <article class="stat-card stat-highlight"><span class="stat-label">GAMES PLAYED</span><strong id="homeGames">0</strong><span class="stat-foot">Every inning matters</span></article>
+          <article class="stat-card"><span class="stat-label">TOTAL RUNS</span><strong id="homeRuns">0</strong><span class="stat-foot">Bring the lumber</span></article>
+          <article class="stat-card"><span class="stat-label">ROSTER SPOTS</span><strong id="homePlayers">0</strong><span class="stat-foot">Players on the books</span></article>
+        </div>
+      </div>
+      <div class="section-wrap latest-wrap">
+        <div class="section-heading compact"><div><span class="eyebrow">AROUND THE DIAMOND</span><h2>THE LATEST.</h2></div><a class="text-link" href="#scores">All scores →</a></div>
+        <div id="homeLatest" class="latest-list"></div>
+      </div>
+      <div class="cta-strip"><div><span class="eyebrow">YOUR SUMMER. YOUR TEAM.</span><h2>MAKE IT A<br><em>CLASSIC.</em></h2></div><a class="btn btn-green" href="#signup">Register your crew <span>↗</span></a></div>
+    </section>
+
+    <section class="page" id="page-signup">
+      <div class="page-banner"><span class="eyebrow">FIRST STEP: SHOW UP</span><h1>GET IN THE <em>GAME.</em></h1><p>Sign up a player or start a squad. We'll see you at the plate.</p></div>
+      <div class="content-grid signup-grid">
+        <form id="signupForm" class="paper-card">
+          <div class="card-kicker">PLAYER REGISTRATION <span>01 / 02</span></div>
+          <h2>Who's stepping up?</h2>
+          <p class="muted">Fields marked with * are required.</p>
+          <label for="playerName">Player name *</label><input id="playerName" name="playerName" required maxlength="70" placeholder="e.g. Casey Slugger">
+          <label for="playerEmail">Email *</label><input id="playerEmail" name="playerEmail" type="email" required maxlength="120" placeholder="you@example.com">
+          <label for="playerNumber">Jersey number <span class="optional">OPTIONAL</span></label><input id="playerNumber" name="playerNumber" type="number" min="0" max="99" placeholder="e.g. 7">
+          <label for="teamChoice">Team *</label><select id="teamChoice" name="teamChoice" required></select>
+          <div class="form-help">Want to start a new team? Choose “Create a new team” and name your crew below.</div>
+          <div id="newTeamFields" class="hidden">
+            <label for="newTeamName">New team name *</label><input id="newTeamName" name="newTeamName" maxlength="50" placeholder="e.g. The Porch Pirates">
+            <label for="teamColor">Team color</label><select id="teamColor" name="teamColor"><option value="green">Field Green</option><option value="red">Tomato Red</option><option value="blue">Pool Blue</option><option value="yellow">Sunshine Yellow</option><option value="purple">Grape Soda</option><option value="orange">Orange Cream</option></select>
+          </div>
+          <label class="check-row"><input type="checkbox" id="captainCheck"> <span>I'm the captain of this team</span></label>
+          <button class="btn btn-green full" type="submit">Send my registration <span>↗</span></button>
+          <p class="fine-print">Demo mode: registrations are saved in this browser. See README for shared, production registration options.</p>
+          <div id="signupMessage" class="message" role="status" aria-live="polite"></div>
+        </form>
+        <aside class="side-note">
+          <div class="side-note-icon">✳</div><span class="eyebrow">THE HOUSE RULES</span><h2>Good sports.<br><em>Great summers.</em></h2>
+          <ul class="rules-list"><li><b>01</b><span>Bring your own glove, bat, and good attitude.</span></li><li><b>02</b><span>Keep your roster current. Captains, you're in charge.</span></li><li><b>03</b><span>Call your own fouls. Respect the call.</span></li><li><b>04</b><span>Make room for one more player whenever you can.</span></li></ul>
+          <div class="handwritten">See you out there! <span>↗</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="page" id="page-teams">
+      <div class="page-banner"><span class="eyebrow">MEET THE CREWS</span><h1>ROSTER <em>ROLL CALL.</em></h1><p>Every team has a story. Here's who's taking the field.</p></div>
+      <div class="section-wrap"><div class="toolbar"><div id="teamCountLabel" class="muted">0 teams registered</div><input id="teamSearch" class="search-input" placeholder="Search teams or players…" aria-label="Search teams or players"></div><div id="teamGrid" class="team-grid"></div></div>
+    </section>
+
+    <section class="page" id="page-standings">
+      <div class="page-banner"><span class="eyebrow">THE RACE TO THE TOP</span><h1>LEAGUE <em>STANDINGS.</em></h1><p>Wins, losses, runs for, and the all-important run differential.</p></div>
+      <div class="section-wrap"><div class="table-card"><div class="table-title"><div><span class="eyebrow">REGULAR SEASON</span><h2>THE LEADERBOARD</h2></div><span class="table-badge">UPDATED LIVE* </span></div><div class="table-scroll"><table><thead><tr><th>#</th><th>TEAM</th><th>GP</th><th>W</th><th>L</th><th>RF</th><th>RA</th><th>DIFF</th></tr></thead><tbody id="standingsBody"></tbody></table></div><p class="fine-print">*Updates from results entered in this browser. Teams are ranked by wins, then run differential.</p></div></div>
+    </section>
+
+    <section class="page" id="page-bracket">
+      <div class="page-banner"><span class="eyebrow">ONE SHOT AT GLORY</span><h1>THE ROAD TO <em>THE CROWN.</em></h1><p>Pool play sets the table. Then it's win-or-go-home time.</p></div>
+      <div class="section-wrap">
+        <div class="format-note"><span class="format-icon">✳</span><div><b>HOW IT WORKS</b><p>Teams are assigned to pools by the commissioner. Pool standings determine playoff seeds. Once playoff games are added, the bracket below shows the road to the title.</p></div></div>
+        <div class="bracket-toolbar"><div><span class="eyebrow">POSTSEASON</span><h2>PLAYOFF BRACKET</h2></div><span class="muted" id="bracketStatus">Awaiting playoff matchups</span></div>
+        <div id="bracketBoard" class="bracket-board"></div>
+        <div class="pool-section"><div class="section-heading compact"><div><span class="eyebrow">BEFORE THE BRACKET</span><h2>POOL <em>PLAY.</em></h2></div></div><div id="poolTables" class="pool-grid"></div></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-scores">
+      <div class="page-banner"><span class="eyebrow">THE BOX SCORE</span><h1>FINAL SCORE. <em>BIG FEELINGS.</em></h1><p>All games, all results, no arguing over who won last week.</p></div>
+      <div class="section-wrap"><div class="toolbar"><div id="scoreCount" class="muted">0 games logged</div><select id="scoreFilter" class="filter-select" aria-label="Filter games"><option value="all">All games</option><option value="pool">Pool play</option><option value="playoff">Playoffs</option></select></div><div id="scoreList" class="score-list"></div></div>
+    </section>
+
+    <section class="page" id="page-admin">
+      <div class="page-banner admin-banner"><span class="eyebrow">COMMISSIONER'S CORNER</span><h1>RUN THE <em>SHOW.</em></h1><p>Manage teams, assign pools, and keep the scorebook straight.</p></div>
+      <div class="section-wrap">
+        <div class="admin-warning"><b>DEMO ADMIN AREA</b><span>This static version has no secure login. Changes are stored in this browser only. Do not use it for private or sensitive data.</span></div>
+        <div class="admin-tabs"><button class="tab active" data-tab="results">Enter results</button><button class="tab" data-tab="teams">Manage teams</button><button class="tab" data-tab="pools">Pool assignments</button><button class="tab" data-tab="settings">League settings</button></div>
+        <div class="admin-panel active" id="admin-results">
+          <div class="admin-panel-heading"><div><span class="eyebrow">THE SCOREBOOK</span><h2>LOG A GAME</h2></div></div>
+          <form id="resultForm" class="admin-form">
+            <div class="field-pair"><div><label for="gameType">Game type</label><select id="gameType"><option value="pool">Pool play</option><option value="playoff">Playoff</option></select></div><div><label for="gameDate">Date</label><input id="gameDate" type="date"></div></div>
+            <div class="field-pair"><div><label for="homeTeam">Home team</label><select id="homeTeam" required></select></div><div><label for="awayTeam">Away team</label><select id="awayTeam" required></select></div></div>
+            <div class="field-pair score-fields"><div><label for="homeScore">Home runs</label><input id="homeScore" type="number" min="0" max="99" required value="0"></div><div><label for="awayScore">Away runs</label><input id="awayScore" type="number" min="0" max="99" required value="0"></div></div>
+            <div id="winnerNote" class="form-help">Ties are not allowed. Enter a final score.</div>
+            <div class="field-pair"><div><label for="roundName">Round / pool label</label><input id="roundName" placeholder="e.g. Pool A · Game 2"></div><div><label for="gameStatus">Status</label><select id="gameStatus"><option value="final">Final</option><option value="scheduled">Scheduled</option></select></div></div>
+            <button class="btn btn-green" type="submit">Save game <span>↗</span></button><div id="resultMessage" class="message" role="status"></div>
+          </form>
+          <div class="admin-subhead"><h3>Recent games</h3><span class="muted">Select delete to remove a result</span></div><div id="adminGameList" class="admin-list"></div>
+        </div>
+        <div class="admin-panel" id="admin-teams">
+          <div class="admin-panel-heading"><div><span class="eyebrow">THE ROSTER SHEET</span><h2>MANAGE TEAMS</h2></div></div>
+          <form id="createTeamForm" class="admin-form inline-admin"><div><label for="adminTeamName">Team name</label><input id="adminTeamName" required maxlength="50" placeholder="New team name"></div><div><label for="adminTeamColor">Team color</label><select id="adminTeamColor"><option value="green">Field Green</option><option value="red">Tomato Red</option><option value="blue">Pool Blue</option><option value="yellow">Sunshine Yellow</option><option value="purple">Grape Soda</option><option value="orange">Orange Cream</option></select></div><button class="btn btn-green" type="submit">Add team +</button></form>
+          <div id="adminTeamList" class="admin-list"></div>
+        </div>
+        <div class="admin-panel" id="admin-pools">
+          <div class="admin-panel-heading"><div><span class="eyebrow">SORT OUT THE GROUPS</span><h2>POOL ASSIGNMENTS</h2></div></div>
+          <p class="muted">Assign each team to a pool. Pool standings on the Playoffs page update from final pool-play results.</p>
+          <form id="poolForm" class="admin-form"><div id="poolAssignments" class="pool-assignment-list"></div><button class="btn btn-green" type="submit">Save pool assignments <span>↗</span></button><div id="poolMessage" class="message" role="status"></div></form>
+          <div class="form-help">Tip: for an even start, assign teams in alternating order (A, B, A, B). Pool assignments don't automatically create schedules or seed playoff teams.</div>
+        </div>
+        <div class="admin-panel" id="admin-settings">
+          <div class="admin-panel-heading"><div><span class="eyebrow">MAKE IT YOUR LEAGUE</span><h2>LEAGUE SETTINGS</h2></div></div>
+          <form id="settingsForm" class="admin-form"><label for="leagueName">League name</label><input id="leagueName" maxlength="70" required><label for="seasonLabel">Season label</label><input id="seasonLabel" maxlength="70" placeholder="Summer Classic 2026"><label for="playoffTeams">Playoff teams</label><select id="playoffTeams"><option value="2">Top 2 teams</option><option value="4">Top 4 teams</option><option value="6">Top 6 teams</option><option value="8">Top 8 teams</option><option value="all">All registered teams</option></select><button class="btn btn-green" type="submit">Save settings <span>↗</span></button><div id="settingsMessage" class="message" role="status"></div></form>
+          <div class="danger-zone"><div><b>Reset demo data</b><p>Restore the sample league and clear all local changes.</p></div><button id="resetDemo" class="btn btn-outline-danger">Reset demo</button></div>
+          <div class="danger-zone"><div><b>Export league data</b><p>Download teams, players, results, pools, and settings as JSON.</p></div><button id="exportData" class="btn btn-outline">Export JSON ↓</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><a class="brand footer-brand" href="#home"><span class="brand-ball">W</span><span><b>BACKYARD</b><small>WIFFLE LEAGUE</small></span></a><div>MADE FOR SUMMER. BUILT FOR BRAGGING RIGHTS.</div><a href="#admin">Commissioner's corner ↗</a></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
