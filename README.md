@@ -5,7 +5,7 @@ A professional sports-league-style wiffle ball tournament site for GitHub Pages.
 ## Included features
 
 - Professional navy, white, and red sports-league design
-- Player-only signup form with one required field: name
+- Player-only signup form with one required field: name, followed by a dedicated confirmation screen
 - Registered-player list, team roster view, standings, scores, pool play, and playoff bracket
 - Commissioner tools for creating teams, assigning pools, entering/deleting scores, and league settings
 - Commissioner tab password gate (`poopy`)
@@ -16,8 +16,11 @@ A professional sports-league-style wiffle ball tournament site for GitHub Pages.
 1. Create a GitHub repository and upload the contents of this folder to its root.
 2. In **Settings → Secrets and variables → Actions**, create a repository secret named `STATICRYPT_PASSWORD` and set its value to `IhaveIBS`.
 3. In **Settings → Pages**, set the source to **GitHub Actions**.
-4. Push to the `main` branch. The workflow in `.github/workflows/deploy.yml` encrypts the page with Staticrypt and publishes the encrypted output.
-5. Open the Pages URL. The site-wide Staticrypt password is `IhaveIBS`; after decrypting the site, the Commissioner tab also prompts for `poopy`.
+4. In **Settings → Pages**, ensure the publishing source is **GitHub Actions**, not “Deploy from a branch.”
+5. Push to the `main` branch or run **Actions → Encrypt and deploy to GitHub Pages → Run workflow**. The workflow uses Staticrypt v3's supported `--directory` option to create `dist/index.html`, checks that the encrypted artifact exists, and deploys it.
+6. Open the Pages URL. The site-wide Staticrypt password is `IhaveIBS`; after decrypting the site, the Commissioner tab prompts for `poopy`.
+
+If the live site does not show a password prompt, open the repository's **Actions** tab and inspect the latest workflow run. A site published from a branch instead of the Actions workflow will serve the unencrypted source HTML. The latest workflow must complete successfully before the updated site is live.
 
 The password is not stored in the repository workflow or source; it is supplied through the GitHub Actions secret. If the secret is absent, the workflow intentionally fails rather than publishing an unprotected page.
 

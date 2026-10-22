@@ -12,6 +12,10 @@
   } catch { state = emptyState(); }
   if (!state || !Array.isArray(state.teams) || !Array.isArray(state.games)) state = emptyState();
   if (!Array.isArray(state.players)) state.players = [];
+  if (!state.settings || typeof state.settings !== "object") state.settings = emptyState().settings;
+  // Normalize data from older browser saves so one incomplete roster cannot break the entire site.
+  state.teams = state.teams.map(t => ({...t, players: Array.isArray(t.players) ? t.players : [], pool: t.pool || "A", color: t.color || "green"}));
+  state.games = state.games.map(g => ({status: "final", type: "pool", ...g}));
   let toastTimer;
   function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); render(); }
   function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2800);}
@@ -93,7 +97,7 @@
     renderPlayerSignups();renderHome();renderTeams();renderStandings();renderScores();renderBracket();renderAdmin();
   }
   const COMMISSIONER_SESSION_KEY = "westsideWiffleCommissionerUnlocked";
-  function commissionerUnlocked(){ return sessionStorage.getItem(COMMISSIONER_SESSION_KEY) === "yes"; }
+  function commissionerUnlocked(){ try { return sessionStorage.getItem(COMMISSIONER_SESSION_KEY) === "yes"; } catch { return false; } }
   function syncCommissionerGate(){
     const unlocked = commissionerUnlocked();
     $("adminLock").hidden = unlocked;
@@ -103,8 +107,8 @@
   $("commissionerPasswordForm").addEventListener("submit", e => {
     e.preventDefault();
     if ($("commissionerPassword").value === "poopy") {
-      sessionStorage.setItem(COMMISSIONER_SESSION_KEY, "yes");
-      $("commissionerLoginMessage").textContent = "Access granted.";
+      try { sessionStorage.setItem(COMMISSIONER_SESSION_KEY, "yes"); } catch {}
+      setMessage("commissionerLoginMessage", "Access granted. Commissioner tools unlocked.", "success");
       syncCommissionerGate();
     } else {
       setMessage("commissionerLoginMessage", "Incorrect password. Try again.", "error");
@@ -112,7 +116,7 @@
     }
   });
   function goToPage(){
-    let page=(location.hash||"#home").slice(1);if(!["home","signup","teams","standings","bracket","scores","admin"].includes(page))page="home";
+    let page=(location.hash||"#home").slice(1);if(!["home","signup","signup-confirmation","teams","standings","bracket","scores","admin"].includes(page))page="home";
     if(page === "admin") syncCommissionerGate();
     document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));
     document.querySelectorAll("[data-page]").forEach(a=>a.classList.toggle("active",a.dataset.page===page));
@@ -130,7 +134,9 @@
     if(!Array.isArray(state.players))state.players=[];
     state.players.push({id:uid(),name,registeredAt:new Date().toISOString()});
     save();$("signupForm").reset();
-    setMessage("signupMessage",`Registration received. Welcome to the league, ${name}!`,"success");
+    $("confirmationPlayerName").textContent = name.toUpperCase();
+    $("confirmationMessage").textContent = `Thanks, ${name}. Your player registration has been received.`;
+    location.hash = "signup-confirmation";
   });
   $("teamSearch").addEventListener("input",renderTeams);
   $("scoreFilter").addEventListener("change",renderScores);
