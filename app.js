@@ -1,30 +1,17 @@
 (() => {
-  const STORAGE_KEY = "backyardWiffleLeague_v1";
+  const STORAGE_KEY = "westsideWiffleLeague_v3";
   const $ = (id) => document.getElementById(id);
   const uid = () => "id-" + Math.random().toString(36).slice(2, 10);
   const today = () => new Date().toISOString().slice(0, 10);
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const colorNames = {green:"Field Green",red:"Tomato Red",blue:"Pool Blue",yellow:"Sunshine Yellow",purple:"Grape Soda",orange:"Orange Cream"};
-  const sample = () => {
-    const teams = [
-      ["Porch Pirates","green","A"],["The Dingers","red","B"],["Grass Stains","blue","A"],["Fence Hoppers","yellow","B"],
-      ["Dirt Dogs","orange","A"],["Moonshot Mafia","purple","B"]
-    ].map(([name,color,pool])=>({id:uid(),name,color,pool,players:[]}));
-    const playerSeed = [["Mason Cole",7,true],["Riley Park",12,false],["Jordan Lee",4,false],["Sam Rivera",22,true],["Avery Brooks",8,false],["Taylor Quinn",3,false],["Drew Morgan",17,true],["Cameron Reed",9,false],["Alex Kim",2,true],["Jamie Fox",11,false],["Parker James",6,true],["Charlie Lane",14,false]];
-    playerSeed.forEach((p,i)=>teams[i%teams.length].players.push({id:uid(),name:p[0],email:p[0].toLowerCase().replace(" ",".")+"@example.com",number:p[1],captain:p[2]}));
-    const games = [
-      {id:uid(),type:"pool",date:today(),home:teams[0].id,away:teams[2].id,homeScore:7,awayScore:4,status:"final",round:"Pool A · Game 1"},
-      {id:uid(),type:"pool",date:today(),home:teams[1].id,away:teams[3].id,homeScore:3,awayScore:5,status:"final",round:"Pool B · Game 1"},
-      {id:uid(),type:"pool",date:today(),home:teams[4].id,away:teams[0].id,homeScore:2,awayScore:6,status:"final",round:"Pool A · Game 2"},
-      {id:uid(),type:"pool",date:today(),home:teams[3].id,away:teams[5].id,homeScore:4,awayScore:4,status:"scheduled",round:"Pool B · Game 2"},
-      {id:uid(),type:"playoff",date:today(),home:teams[0].id,away:teams[1].id,homeScore:8,awayScore:6,status:"final",round:"Semifinal 1"},
-      {id:uid(),type:"playoff",date:today(),home:teams[2].id,away:teams[3].id,homeScore:0,awayScore:0,status:"scheduled",round:"Semifinal 2"}
-    ];
-    return {settings:{leagueName:"Backyard Wiffle League",seasonLabel:"Summer Classic 2026",playoffTeams:"4"},teams,games};
-  };
+  const colorNames = {green:"Navy",red:"Red",blue:"Blue",yellow:"Gold",purple:"Purple",orange:"Orange"};
+  const emptyState = () => ({settings:{leagueName:"Westside Wiffle League",seasonLabel:"OFFICIAL LEAGUE",playoffTeams:"4"},teams:[],games:[],players:[]});
   let state;
-  try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || sample(); } catch { state = sample(); }
-  if (!state || !Array.isArray(state.teams) || !Array.isArray(state.games)) state = sample();
+  try {
+    state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || emptyState();
+  } catch { state = emptyState(); }
+  if (!state || !Array.isArray(state.teams) || !Array.isArray(state.games)) state = emptyState();
+  if (!Array.isArray(state.players)) state.players = [];
   let toastTimer;
   function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); render(); }
   function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2800);}
@@ -44,11 +31,17 @@
   function setMessage(id,msg,kind="success"){const el=$(id);if(!el)return;el.textContent=msg;el.className="message "+kind;}
   function optionsHtml(selected=""){return `<option value="">Choose a team</option>`+state.teams.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(t=>`<option value="${escapeHtml(t.id)}" ${t.id===selected?"selected":""}>${escapeHtml(t.name)}</option>`).join("");}
   function renderTeamSelects(){
-    $("teamChoice").innerHTML=optionsHtml()+`<option value="__new__">＋ Create a new team</option>`;
     $("homeTeam").innerHTML=optionsHtml();$("awayTeam").innerHTML=optionsHtml();
   }
+  function renderPlayerSignups(){
+    const players = state.players || [];
+    const count = $("signupPlayerCount");
+    const list = $("signupPlayerList");
+    if (count) count.textContent = players.length;
+    if (list) list.innerHTML = players.length ? `<ol>${players.map((p,i)=>`<li><span class="registered-number">${String(i+1).padStart(2,"0")}</span><span>${escapeHtml(p.name)}</span></li>`).join("")}</ol>` : '<p class="muted registration-empty">No player registrations yet. Be the first to sign up.</p>';
+  }
   function renderHome(){
-    const players=state.teams.reduce((n,t)=>n+t.players.length,0);
+    const players=(state.players||[]).length+state.teams.reduce((n,t)=>n+t.players.length,0);
     $("homeTeamCount").textContent=state.teams.length;$("homeGames").textContent=finalGames().length;
     $("homeRuns").textContent=finalGames().reduce((n,g)=>n+Number(g.homeScore)+Number(g.awayScore),0);
     $("homePlayers").textContent=players;
@@ -97,35 +90,47 @@
     document.title=(state.settings.leagueName||"Backyard Wiffle League");
     document.querySelectorAll(".brand b").forEach(el=>el.textContent=(state.settings.leagueName||"Backyard Wiffle League").split(" ").slice(0,2).join(" ").toUpperCase());
     document.querySelectorAll(".brand small").forEach(el=>el.textContent=(state.settings.seasonLabel||"WIFFLE LEAGUE").toUpperCase());
-    renderHome();renderTeams();renderStandings();renderScores();renderBracket();renderAdmin();
+    renderPlayerSignups();renderHome();renderTeams();renderStandings();renderScores();renderBracket();renderAdmin();
   }
+  const COMMISSIONER_SESSION_KEY = "westsideWiffleCommissionerUnlocked";
+  function commissionerUnlocked(){ return sessionStorage.getItem(COMMISSIONER_SESSION_KEY) === "yes"; }
+  function syncCommissionerGate(){
+    const unlocked = commissionerUnlocked();
+    $("adminLock").hidden = unlocked;
+    $("adminContent").hidden = !unlocked;
+    if (!unlocked) $("commissionerPassword").value = "";
+  }
+  $("commissionerPasswordForm").addEventListener("submit", e => {
+    e.preventDefault();
+    if ($("commissionerPassword").value === "poopy") {
+      sessionStorage.setItem(COMMISSIONER_SESSION_KEY, "yes");
+      $("commissionerLoginMessage").textContent = "Access granted.";
+      syncCommissionerGate();
+    } else {
+      setMessage("commissionerLoginMessage", "Incorrect password. Try again.", "error");
+      $("commissionerPassword").select();
+    }
+  });
   function goToPage(){
     let page=(location.hash||"#home").slice(1);if(!["home","signup","teams","standings","bracket","scores","admin"].includes(page))page="home";
+    if(page === "admin") syncCommissionerGate();
     document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));
     document.querySelectorAll("[data-page]").forEach(a=>a.classList.toggle("active",a.dataset.page===page));
     $("mainNav").classList.remove("open");window.scrollTo({top:0,behavior:"smooth"});
-    if(page==="signup")renderTeamSelects();
+    if(page==="signup")renderPlayerSignups();
   }
   $("menuToggle").addEventListener("click",()=>$("mainNav").classList.toggle("open"));
   window.addEventListener("hashchange",goToPage);
-  $("teamChoice").addEventListener("change",()=>{$("newTeamFields").classList.toggle("hidden",$("teamChoice").value!=="__new__");$("newTeamName").required=$("teamChoice").value==="__new__";});
   $("signupForm").addEventListener("submit",e=>{
     e.preventDefault();
-    const name=$("playerName").value.trim(),email=$("playerEmail").value.trim(),choice=$("teamChoice").value;
-    if(!choice){setMessage("signupMessage","Choose a team or create a new one.","error");return;}
-    let target;
-    if(choice==="__new__"){
-      const nameNew=$("newTeamName").value.trim();
-      if(!nameNew){setMessage("signupMessage","Give your new team a name first.","error");return;}
-      if(state.teams.some(t=>t.name.toLowerCase()===nameNew.toLowerCase())){setMessage("signupMessage","That team name is already taken in this league.","error");return;}
-      target={id:uid(),name:nameNew,color:$("teamColor").value,pool:"A",players:[]};state.teams.push(target);
-    }else target=team(choice);
-    if(!target){setMessage("signupMessage","That team could not be found. Refresh and try again.","error");return;}
-    if(target.players.some(p=>p.email.toLowerCase()===email.toLowerCase())){setMessage("signupMessage","That email is already registered on this team.","error");return;}
-    const player={id:uid(),name,email,number:$("playerNumber").value||"",captain:$("captainCheck").checked};
-    if(player.captain)target.players.forEach(p=>p.captain=false);
-    target.players.push(player);save();$("signupForm").reset();$("newTeamFields").classList.add("hidden");$("newTeamName").required=false;
-    setMessage("signupMessage",`You're on the roster, ${name}! Welcome to ${target.name}.`,"success");
+    const name=$("playerName").value.trim();
+    if(!name){setMessage("signupMessage","Enter your name to register.","error");return;}
+    const duplicate=(state.players||[]).some(p=>p.name.trim().toLowerCase()===name.toLowerCase());
+    if(duplicate){setMessage("signupMessage","That name is already on the player list.","error");return;}
+    if(!Array.isArray(state.players))state.players=[];
+    state.players.push({id:uid(),name,registeredAt:new Date().toISOString()});
+    save();$("signupForm").reset();
+    setMessage("signupMessage",`Registration received. Welcome to the league, ${name}!`,"success");
   });
   $("teamSearch").addEventListener("input",renderTeams);
   $("scoreFilter").addEventListener("change",renderScores);
@@ -146,8 +151,8 @@
   $("poolForm").addEventListener("submit",e=>{e.preventDefault();document.querySelectorAll("[data-pool-team]").forEach(sel=>{const t=team(sel.dataset.poolTeam);if(t)t.pool=sel.value;});save();setMessage("poolMessage","Pool assignments saved.","success");});
   $("settingsForm").addEventListener("submit",e=>{e.preventDefault();state.settings.leagueName=$("leagueName").value.trim();state.settings.seasonLabel=$("seasonLabel").value.trim();state.settings.playoffTeams=$("playoffTeams").value;save();setMessage("settingsMessage","League settings saved.","success");});
   document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===tab));document.querySelectorAll(".admin-panel").forEach(p=>p.classList.toggle("active",p.id==="admin-"+tab.dataset.tab));}));
-  $("resetDemo").addEventListener("click",()=>{if(confirm("Reset all browser data to the original sample league? This cannot be undone.")){state=sample();save();toast("Demo league restored.");}});
+  $("resetDemo").addEventListener("click",()=>{if(confirm("Clear all local player registrations, teams, games, and settings? This cannot be undone.")){state=emptyState();save();toast("League data cleared.");}});
   $("exportData").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="backyard-wiffle-league.json";a.click();URL.revokeObjectURL(url);toast("League JSON export prepared.");});
   $("gameDate").value=today();
-  render();goToPage();
+  syncCommissionerGate();render();goToPage();
 })();

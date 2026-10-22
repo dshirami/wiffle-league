@@ -1,57 +1,46 @@
-# Backyard Wiffle League
+# Westside Wiffle League
 
-A responsive, retro backyard-baseball tournament website built with plain HTML, CSS, and JavaScript. It is designed to deploy directly to **GitHub Pages** without a build step.
+A professional sports-league-style wiffle ball tournament site for GitHub Pages. The initial league is empty: there are no sample teams, players, or games.
 
-## Features
+## Included features
 
-- Home page with league stats and latest games
-- Player signup form; create a team or join an existing roster
-- Team roster cards, jersey numbers, captain labels, and team search
-- Pool standings (wins, losses, runs for/against, run differential)
-- Pool-play score entry and playoff score entry
-- Playoff bracket view grouped by round
-- Commissioner area for creating/deleting teams, assigning pools, recording/deleting games, changing league name, and exporting JSON
-- Responsive mobile navigation and retro field-inspired styling
-- Browser `localStorage` persistence
+- Professional navy, white, and red sports-league design
+- Player-only signup form with one required field: name
+- Registered-player list, team roster view, standings, scores, pool play, and playoff bracket
+- Commissioner tools for creating teams, assigning pools, entering/deleting scores, and league settings
+- Commissioner tab password gate (`poopy`)
+- Staticrypt site-wide password encryption configured for GitHub Pages deployment using the repository secret `STATICRYPT_PASSWORD`
 
-## Run locally
+## Deploy with Staticrypt to GitHub Pages
 
-You need a modern browser. The easiest option is to open `index.html` directly. For a local HTTP server, run:
+1. Create a GitHub repository and upload the contents of this folder to its root.
+2. In **Settings → Secrets and variables → Actions**, create a repository secret named `STATICRYPT_PASSWORD` and set its value to `IhaveIBS`.
+3. In **Settings → Pages**, set the source to **GitHub Actions**.
+4. Push to the `main` branch. The workflow in `.github/workflows/deploy.yml` encrypts the page with Staticrypt and publishes the encrypted output.
+5. Open the Pages URL. The site-wide Staticrypt password is `IhaveIBS`; after decrypting the site, the Commissioner tab also prompts for `poopy`.
+
+The password is not stored in the repository workflow or source; it is supplied through the GitHub Actions secret. If the secret is absent, the workflow intentionally fails rather than publishing an unprotected page.
+
+## Important security and data limitations
+
+- Staticrypt is client-side page encryption, not a substitute for server-side authentication. It is suitable as a casual access barrier, not for sensitive information.
+- The Commissioner password gate is implemented in client-side JavaScript and is also only a casual barrier. Anyone with access to the source can inspect it. For real administrative security, use server-side authentication and authorization.
+- This is a static site and stores registrations, teams, and scores in the current browser's `localStorage`. Visitor data is not shared across devices or browsers. A shared public registration list requires a backend such as Supabase or Firebase.
+- Player registration asks only for a name. Do not collect sensitive information.
+
+## Local preview
+
+Open `index.html` directly or run:
 
 ```bash
 python -m http.server 8000
 ```
 
-Then open <http://localhost:8000>.
+Then visit <http://localhost:8000>. The local preview is not encrypted by Staticrypt; encryption is performed in the GitHub Actions deployment workflow.
 
-## Deploy on GitHub Pages
-
-1. Create a new GitHub repository, for example `backyard-wiffle-league`.
-2. Upload `index.html`, `styles.css`, `app.js`, and this `README.md` to the repository root. Keep the file names unchanged.
-3. In the repository, open **Settings → Pages**.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Choose branch `main` and folder `/(root)`, then click **Save**.
-6. Wait for GitHub Pages to publish the site. Your URL will look like `https://YOUR-USERNAME.github.io/REPOSITORY-NAME/`.
-
-You can also upload the included ZIP to GitHub by extracting it first and committing the files.
-
-## Important limitations of GitHub Pages
-
-This version is a **static demo**. It saves teams, signups, settings, and scores in the current browser's local storage. That means:
-- Each visitor has their own separate data.
-- A registration submitted on one device does not appear on another device.
-- The Commissioner page is not protected by a real login; it is not secure.
-- Local browser data can be cleared by the browser.
-- Do not collect sensitive/private information in this demo.
-
-GitHub Pages cannot run a database or server-side authentication. For a real tournament shared across all players and devices, connect this front end to a backend such as **Supabase** (database, secure admin authentication, and shared registration/results). Keep any service-role secrets on a server, never in browser JavaScript. The included JSON export is a simple way to back up demo data.
-
-## Pool play and playoffs
-
-The commissioner can assign teams to pools A–F and record pool-play games. Pool standings update from final pool games. Add playoff games with a round name such as `Quarterfinal 1`, `Semifinal 1`, or `Championship` to display them in the bracket. This version does not automatically generate a round-robin schedule or seed teams into the playoff bracket; the commissioner sets matchups and rounds manually.
-
-## Project files
+## Files
 
 - `index.html` — pages and forms
-- `styles.css` — layout, colors, and responsive styling
-- `app.js` — local data model, registration, standings, score entry, and commissioner actions
+- `styles.css` — responsive sports-league design
+- `app.js` — registrations, standings, score entry, and commissioner gate
+- `.github/workflows/deploy.yml` — Staticrypt encryption and GitHub Pages deployment
